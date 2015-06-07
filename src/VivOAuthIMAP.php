@@ -33,6 +33,8 @@ class VivOAuthIMAP {
      */
     public $accessToken;
 
+    public $lastCodeDesc = null;
+
     /**
      * @var FilePointer $sock
      */
@@ -170,6 +172,16 @@ class VivOAuthIMAP {
         return $this->modifyResponse($response);
     }
 
+    public function searchMessages($query) {
+        $this->writeCommannd("A" . $this->codeCounter, "SEARCH CHARSET UTF-8 ".$query);
+        $response = $this->readResponse("A" . $this->codeCounter);
+        $line = $response[0][1];
+        $line = explode('SEARCH', $line);
+        $line = trim($line[1]);
+        $line = explode(' ', $line);
+        return $line;
+    }
+
     /**
      * Selects inbox for further operations
      */
@@ -291,6 +303,9 @@ class VivOAuthIMAP {
      * @param string $command
      */
     private function writeCommannd($code, $command) {
+        if(isset($this->debug) && $this->debug) {
+            echo ' <<< ', $code . " " . $command . "\r\n";
+        }
         fwrite($this->fp, $code . " " . $command . "\r\n");
     }
 
@@ -308,9 +323,14 @@ class VivOAuthIMAP {
         // Position 1 message
 
         while ($line = fgets($this->fp)) {
+            if(isset($this->debug) && $this->debug) {
+                echo ' >>> ', $line;
+            }
+
             $checkLine = preg_split('/\s+/', $line, 0, PREG_SPLIT_NO_EMPTY);
             if (@$checkLine[0] == $code) {
                 $response[0][0] = $checkLine[1];
+                $this->lastCodeDesc = implode(' ', array_slice($checkLine, 2));
                 break;
             } else if (@$checkLine[0] != "*") {
                 if (isset($response[1][$i]))
