@@ -177,8 +177,16 @@ class VivOAuthIMAP {
         $response = $this->readResponse("A" . $this->codeCounter);
         $line = $response[0][1];
         $line = explode('SEARCH', $line);
-        $line = trim($line[1]);
-        $line = explode(' ', $line);
+        if(count($line) == 2) {
+            $line = trim($line[1]);
+            if($line) {
+                $line = explode(' ', $line);
+            } else {
+                $line = array();
+            }
+        } else {
+            $line = false;
+        }
         return $line;
     }
 
@@ -238,8 +246,12 @@ class VivOAuthIMAP {
 
         $line = $response[0][1];
         $splitMessage = explode("(", $line);
-        $splitMessage[1] = str_replace("MESSAGES ", "", $splitMessage[1]);
-        $count = str_replace(")", "", $splitMessage[1]);
+        if(count($splitMessage) > 1) {
+            $splitMessage[1] = str_replace("MESSAGES ", "", $splitMessage[1]);
+            $count = str_replace(")", "", $splitMessage[1]);
+        } else {
+            $count = false;
+        }
 
         return $count;
     }
@@ -316,6 +328,9 @@ class VivOAuthIMAP {
      */
     private function readResponse($code) {
         $response = Array();
+
+        $response[0][0] = '';
+        $response[0][1] = '';
 
         $i = 1;
         // $i = 1, because 0 will be status of response
