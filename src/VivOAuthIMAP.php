@@ -315,6 +315,7 @@ class VivOAuthIMAP {
      * @param string $command
      */
     private function writeCommannd($code, $command) {
+        $this->lastCodeDesc = '';
         if(isset($this->debug) && $this->debug) {
             echo ' <<< ', $code . " " . $command . "\r\n";
         }
